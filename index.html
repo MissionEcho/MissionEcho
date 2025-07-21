@@ -14,10 +14,10 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      text-align: center;
     }
     #game {
       display: none;
-      text-align: center;
     }
     button {
       margin-top: 10px;
@@ -36,20 +36,43 @@
 
   <div id="game">
     <h2>Mission Echo</h2>
-    <p id="aiText">Ügynök, hall engem? Készen áll a küldetésre?</p>
-    <button onclick="startListening()">Válasz rögzítése</button>
+    <p id="aiText"></p>
+    <button onclick="startListening()">🎤 Válasz rögzítése</button>
     <p id="response"></p>
   </div>
 
   <script>
     const correctPassword = "mission2025";
 
+    const missionSteps = [
+      {
+        prompt: "Ügynök, itt a központ. A Vízimolnár 10. előtt áll. Készen áll a küldetésre?",
+        expected: ["igen", "kezdjük", "indulhatunk"],
+        success: "Most induljon el a dombon túli kisbolthoz. Amint meglátja a bolt cégérét, álljon meg, és mondja a jelszót: foxtrottdeltacharlie.",
+        fail: "Nem értettem. Készen áll a küldetésre?"
+      },
+      {
+        prompt: "Mondja a jelszót, kérem.",
+        expected: ["foxtrottdeltacharlie"],
+        success: "Kiváló. Most jöjjön a végső kérdés. A bolt feletti felirat utolsó betűje micsoda?",
+        fail: "Ismételje meg a jelszót. Foxtrott... delta... charlie."
+      },
+      {
+        prompt: "A bolt felirata utolsó betűje?",
+        expected: ["u"],
+        success: "Küldetés teljesítve. Kiváló munka, ügynök.",
+        fail: "Nézze meg újra alaposabban a feliratot!"
+      }
+    ];
+
+    let currentStep = 0;
+
     function checkPassword() {
       const entered = document.getElementById('password').value;
       if (entered === correctPassword) {
         document.getElementById('login').style.display = 'none';
         document.getElementById('game').style.display = 'block';
-        speak("Ügynök, hall engem? Készen áll a küldetésre?");
+        playStep();
       } else {
         alert("Hibás jelszó!");
       }
@@ -60,6 +83,13 @@
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'hu-HU';
       synth.speak(utterance);
+      document.getElementById('aiText').innerText = text;
+    }
+
+    function playStep() {
+      if (currentStep < missionSteps.length) {
+        speak(missionSteps[currentStep].prompt);
+      }
     }
 
     function startListening() {
@@ -71,10 +101,14 @@
         const transcript = event.results[0][0].transcript.toLowerCase();
         document.getElementById('response').innerText = `Válasz: ${transcript}`;
 
-        if (transcript.includes("igen")) {
-          speak("Remek. Indulhatunk. Nézzen jobbra – lát egy piros postaládát?");
+        const step = missionSteps[currentStep];
+        const matched = step.expected.length === 0 || step.expected.some(answer => transcript.includes(answer));
+
+        if (matched) {
+          speak(step.success);
+          currentStep++;
         } else {
-          speak("Úgy tűnik, még nem áll készen. De az időnk fogy… döntse el gyorsan!");
+          speak(step.fail);
         }
       }
     }
