@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission Echo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0b0c10;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    #game {
+      display: none;
+      text-align: center;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="login">
+    <h2>Mission Echo – Belépés</h2>
+    <input type="password" id="password" placeholder="Add meg a jelszót">
+    <button onclick="checkPassword()">Belépés</button>
+  </div>
+
+  <div id="game">
+    <h2>Mission Echo</h2>
+    <p id="aiText">Ügynök, hall engem? Készen áll a küldetésre?</p>
+    <button onclick="startListening()">Válasz rögzítése</button>
+    <p id="response"></p>
+  </div>
+
+  <script>
+    const correctPassword = "mission2025";
+
+    function checkPassword() {
+      const entered = document.getElementById('password').value;
+      if (entered === correctPassword) {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+        speak("Ügynök, hall engem? Készen áll a küldetésre?");
+      } else {
+        alert("Hibás jelszó!");
+      }
+    }
+
+    function speak(text) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'hu-HU';
+      synth.speak(utterance);
+    }
+
+    function startListening() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'hu-HU';
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript.toLowerCase();
+        document.getElementById('response').innerText = `Válasz: ${transcript}`;
+
+        if (transcript.includes("igen")) {
+          speak("Remek. Indulhatunk. Nézzen jobbra – lát egy piros postaládát?");
+        } else {
+          speak("Úgy tűnik, még nem áll készen. De az időnk fogy… döntse el gyorsan!");
+        }
+      }
+    }
+  </script>
+</body>
+</html>
